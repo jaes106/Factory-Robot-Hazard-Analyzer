@@ -1,29 +1,60 @@
 import java.util.Scanner;
 
+
+enum MachineryState {
+    WORN(1.3),
+    FAULTY(2.0),
+    CRITICAL(3.0);
+
+    private final double riskFactor;
+
+    MachineryState(double riskFactor) {
+        this.riskFactor = riskFactor;
+    }
+
+    public double getRiskFactor() {
+        return riskFactor;
+    }
+
+    public static MachineryState fromString(String input)
+            throws RobotSafetyException {
+        try {
+            return MachineryState.valueOf(input.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RobotSafetyException(
+                    "Error: Machinery state should be worn, faulty or critical!"
+            );
+        }
+    }
+}
+
+
 public class FactoryRobotHazardAnalyzer {
 
-    static double calculateHazardRisk(double armPrecision, int workerDensity, String machineryState) throws RobotSafetyException {
+    static double calculateHazardRisk(
+            double armPrecision,
+            int workerDensity,
+            MachineryState machineryState
+    ) throws RobotSafetyException {
+
         if (armPrecision < 0.0 || armPrecision > 1.0) {
-            throw new RobotSafetyException("Error: Arm precision must be 0.0-1.0");
+            throw new RobotSafetyException(
+                    "Error: Arm precision must be 0.0–1.0"
+            );
         }
+
         if (workerDensity < 1 || workerDensity > 20) {
-            throw new RobotSafetyException("Error: Worker density must be 1-20");
+            throw new RobotSafetyException(
+                    "Error: Worker density must be 1–20"
+            );
         }
 
-
-        double machineRiskFactor = 0;
-        switch (machineryState.toLowerCase()) {
-            case "worn" -> machineRiskFactor = 1.3;
-            case "faulty" -> machineRiskFactor = 2.0;
-            case "critical" -> machineRiskFactor = 3.0;
-            default -> {
-                throw new RobotSafetyException("Error: Machinery state should be worn, faulty or critical!");
-            }
-        };
-        return ((1.0 - armPrecision) * 15.0) + (workerDensity * machineRiskFactor);
+        return ((1.0 - armPrecision) * 15.0)
+                + (workerDensity * machineryState.getRiskFactor());
     }
 
     public static void main(String[] args) {
+
         Scanner sc = new Scanner(System.in);
 
         System.out.println("Enter Arm Precision (0.0 - 1.0):");
@@ -33,15 +64,30 @@ public class FactoryRobotHazardAnalyzer {
         int workerDensity = sc.nextInt();
 
         sc.nextLine();
+
         System.out.println("Enter Machinery State (Worn/Faulty/Critical):");
-        String machineryState = sc.nextLine();
+        String machineryInput = sc.nextLine();
 
         try {
-            System.out.println("Hazard Risk Factor: " + calculateHazardRisk(armPrecision, workerDensity, machineryState));
-        }
-        catch (RobotSafetyException rse){
+            MachineryState machineryState =
+                    MachineryState.fromString(machineryInput);
+
+            double hazardRisk =
+                    calculateHazardRisk(
+                            armPrecision,
+                            workerDensity,
+                            machineryState
+                    );
+
+            System.out.printf(
+                    "Hazard Risk Factor: %.2f%n",
+                    hazardRisk
+            );
+
+        } catch (RobotSafetyException rse) {
             System.out.println(rse.getMessage());
         }
+
         sc.close();
     }
 }
